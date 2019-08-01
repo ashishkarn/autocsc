@@ -6,6 +6,12 @@ import subprocess
 from threading import Thread
 import threading
 
+def check_for_dll(sourcecode):
+    mainPresence=re.findall(r"static void Main()", sourcecode)
+    if(len(mainPresence)==0):
+        return True
+    return False
+    
 def callback(textInput,rootdir):
     sourcecode=textInput.get()
     print("Input code generated...")
@@ -15,7 +21,8 @@ def callback(textInput,rootdir):
     buildname=extractNamespace(sourcecode)
     directoryname=buildDirectories(rootdir,buildname,sourcecode)
     os.chdir(directoryname)
-    compilesource(directoryname)
+    dllflag=check_for_dll(sourcecode)
+    compilesource(dllflag,directoryname)
     runsource(directoryname)
     
 def compilationthread(a,textInput,rootdir):
@@ -24,10 +31,12 @@ def compilationthread(a,textInput,rootdir):
     a[0]=b
     print("Executing on thread : {0}".format(a[0]))
     subthread.start()
+    a[0]=a[0]-1
         
 def main():
     rootdir=os.getcwd()
     root = Tk()
+    root.geometry("200x200")
     label1 = Label( root, text="Compile and Run")
     textInput = Entry(root, bd=5)
     a=[0]
@@ -69,11 +78,17 @@ def buildDirectories(rootdir,buildname,sourcecode):
     sourcefile.close()
     return directoryname
         
-def compilesource(directoryname):
+def compilesource(dllflag, directoryname):
     print("Compiling..")
     compilecode="csc -out:executable.exe source.cs"
+    compilecode2="csc -target:library -out:library.dll source.cs"
     try:
-        os.system(compilecode)
+        if(dllflag==True):
+            print("Compiling library.dll")
+            os.system(compilecode2)
+        else:
+            print("Compiling executable.exe")
+            os.system(compilecode)
     except:
         print("Error in compiling")
         
@@ -83,7 +98,8 @@ def runsource(directoryname):
         try:
             print("Executing..")
             executecode="cmd.exe /K executable.exe"
-            os.system(executecode)            
+            os.system(executecode)
+            print(log)
         except Exception as e:
             print("Error")
             print(e.returncode)
@@ -92,6 +108,8 @@ def runsource(directoryname):
     print("\n############################\n")
                 
 main()
+
+
 
 
 
