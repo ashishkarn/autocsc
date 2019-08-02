@@ -36,7 +36,7 @@ def compilationthread(a,textInput,rootdir):
 def main():
     rootdir=os.getcwd()
     root = Tk()
-    root.geometry("200x200")
+    root.geometry("300x300")
     label1 = Label( root, text="Compile and Run")
     textInput = Entry(root, bd=5)
     a=[0]
@@ -95,14 +95,10 @@ def compilesource(dllflag, directoryname):
 
 def runsource(directoryname):
     if(os.path.exists("executable.exe")):
-        try:
-            print("Executing..")
-            executecode="cmd.exe /K executable.exe"
-            os.system(executecode)
-            print(log)
-        except Exception as e:
-            print("Error")
-            print(e.returncode)
+        print("Executing..")
+        executecode="start cmd.exe /K executable.exe"
+        #subprocess.Popen(['echo hello'], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        os.system(executecode)
     else:
         print("Executable not found at "+directoryname)
     print("\n############################\n")
