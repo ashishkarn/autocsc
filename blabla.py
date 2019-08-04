@@ -10,6 +10,8 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.core.window import Window
+from kivy.uix.dropdown import DropDown
 
 def check_for_dll(sourcecode):
     mainPresence=re.findall(r"static void Main()", sourcecode)
@@ -44,30 +46,30 @@ def rgba(R, G, B, A):
 class Container(GridLayout):
     def __init__(self, **kwargs):
         super(Container, self).__init__(**kwargs)
-        self.rows = 3
+        self.rows = 4
         self.a=[0]
         self.rootdir=os.getcwd()
-        
-        self.textArea = TextInput(multiline = True, background_color = rgba(255, 255, 255, 1), focus=True)
+
+        self.menuBar = GridLayout(cols = 5, size_hint_y = None, height = 20)
+        self.textArea = TextInput(multiline = True, background_color = rgba(255, 255, 255, 1))
         self.buttonLayout = GridLayout(cols = 3, size_hint_y = 0.05, spacing = 1)
-        self.outputLabel = Label(text = 'Output:')
-        self.executeButton = Button(text = 'Compile dll', background_normal = '', background_color = rgba(32, 170, 14, 1), size_hint_x = 0.25, on_press=lambda x: compilationthread(self.a,self.textArea,self.rootdir,self.outputArea))
+        self.outputLabel = Label(text = 'Output:', color = rgba(1, 1, 1, 1))
+        self.executeButton = Button(text = 'Execute', background_normal = '', background_color = rgba(32, 170, 14, 1), size_hint_x = 0.25, on_press=lambda x: compilationthread(self.a,self.textArea,self.rootdir,self.outputArea))
         self.outputArea = TextInput(multiline = True, background_color = rgba(222, 222, 222, 1), size_hint_y = 0.35)
 
+        self.add_widget(self.menuBar)
         self.add_widget(self.textArea)
         self.buttonLayout.add_widget(self.outputLabel)
         self.buttonLayout.add_widget(self.executeButton)
         self.add_widget(self.buttonLayout)
         self.add_widget(self.outputArea)
 
-
 class AutoCSC(App):
     def build(self):
         return Container()
-        
 
 def main():
-    rootdir=os.getcwd()
+    Window.clearcolor = rgba(222, 222, 222, 1)
     AutoCSC().run()
     #root = Tk()
     #root.geometry("300x300")
@@ -138,8 +140,6 @@ def runsource(directoryname,output):
     print("\n############################\n")
                 
 main()
-
-
 
 
 
