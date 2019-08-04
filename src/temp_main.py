@@ -17,6 +17,8 @@ def main():
     Window.clearcolor = rgba(222, 222, 222, 1)
     AutoCSC().run()
     
+#Seperate source files for modules.
+    
 #GUI Container and main thread
 def callback(textInput,rootdir,outputArea):
     sourcecode=textInput.text
