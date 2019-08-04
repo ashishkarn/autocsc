@@ -13,32 +13,31 @@ from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.uix.dropdown import DropDown
 
-def check_for_dll(sourcecode):
-    mainPresence=re.findall(r"static void Main()", sourcecode)
-    if(len(mainPresence)==0):
-        return True
-    return False
+def main():
+    Window.clearcolor = rgba(222, 222, 222, 1)
+    AutoCSC().run()
     
-def callback(textInput,rootdir,output):
+#GUI Container and main thread
+def callback(textInput,rootdir,outputArea):
     sourcecode=textInput.text
-    output.text = "Input code generated..."
+    outputArea.text = "Input code generated..."
     if not sourcecode or len(sourcecode.strip())==0:
-        output.text = "Empty File..."
+        outputArea.text = "Empty File..."
         return
     buildname=extractNamespace(sourcecode)
     directoryname=buildDirectories(rootdir,buildname,sourcecode)
     os.chdir(directoryname)
     dllflag=check_for_dll(sourcecode)
-    compilesource(dllflag,directoryname)
-    runsource(directoryname,output)
+    compilesource(dllflag,directoryname,outputArea)
+    runsource(directoryname,outputArea)
     
-def compilationthread(a,textInput,rootdir,output):
-    subthread=Thread(target=callback,args=(textInput,rootdir,output))
-    b=a[0]+1
-    a[0]=b
-    print("Executing on thread : {0}".format(a[0]))
+def compilationthread(threadCount,textInput,rootdir,outputArea):
+    subthread=Thread(target=callback,args=(textInput,rootdir,outputArea))
+    b=threadCount[0]+1
+    threadCount[0]=b
+    print("Executing on thread : {0}".format(threadCount[0]))
     subthread.start()
-    a[0]=a[0]-1
+    threadCount[0]=threadCount[0]-1
 
 def rgba(R, G, B, A):
     return (R/255, G/255, B/255, A)
@@ -47,14 +46,14 @@ class Container(GridLayout):
     def __init__(self, **kwargs):
         super(Container, self).__init__(**kwargs)
         self.rows = 4
-        self.a=[0]
+        self.threadCount=[0]
         self.rootdir=os.getcwd()
 
         self.menuBar = GridLayout(cols = 5, size_hint_y = None, height = 20)
         self.textArea = TextInput(multiline = True, background_color = rgba(255, 255, 255, 1))
         self.buttonLayout = GridLayout(cols = 3, size_hint_y = 0.05, spacing = 1)
         self.outputLabel = Label(text = 'Output:', color = rgba(1, 1, 1, 1))
-        self.executeButton = Button(text = 'Execute', background_normal = '', background_color = rgba(32, 170, 14, 1), size_hint_x = 0.25, on_press=lambda x: compilationthread(self.a,self.textArea,self.rootdir,self.outputArea))
+        self.executeButton = Button(text = 'Execute', background_normal = '', background_color = rgba(32, 170, 14, 1), size_hint_x = 0.25, on_press=lambda x: compilationthread(self.threadCount,self.textArea,self.rootdir,self.outputArea))
         self.outputArea = TextInput(multiline = True, background_color = rgba(222, 222, 222, 1), size_hint_y = 0.35)
 
         self.add_widget(self.menuBar)
@@ -68,20 +67,7 @@ class AutoCSC(App):
     def build(self):
         return Container()
 
-def main():
-    Window.clearcolor = rgba(222, 222, 222, 1)
-    AutoCSC().run()
-    #root = Tk()
-    #root.geometry("300x300")
-    #label1 = Label( root, text="Compile and Run")
-    #textInput = Entry(root, bd=5)
-    #a=[0]
-    #submit = Button(root, text ="Submit", command = lambda: compilationthread(a,textInput,rootdir))
-    #label1.pack()
-    #textInput.pack()
-    #submit.pack(side =BOTTOM)
-    #root.mainloop()
-
+#Compilation and execution specific routines
 def extractNamespace(sourcecode):
     buildnames=re.findall(r"\nnamespace \S+", sourcecode)
     if len(buildnames)==0:
@@ -113,9 +99,15 @@ def buildDirectories(rootdir,buildname,sourcecode):
     sourcefile.write(sourcecode)
     sourcefile.close()
     return directoryname
-        
-def compilesource(dllflag, directoryname):
-    print("Compiling..")
+
+def check_for_dll(sourcecode):
+    mainPresence=re.findall(r"static void Main", sourcecode)
+    if(len(mainPresence)==0):
+        return True
+    return False
+
+def compilesource(dllflag, directoryname, outputArea):
+    outputArea.text = "Compiling..."
     compilecode="csc -out:executable.exe source.cs"
     compilecode2="csc -target:library -out:library.dll source.cs"
     try:
@@ -128,12 +120,10 @@ def compilesource(dllflag, directoryname):
     except:
         print("Error in compiling")
         
-
-def runsource(directoryname,output):
+def runsource(directoryname,outputArea):
     if(os.path.exists("executable.exe")):
-        output.text = "Executing.."
+        outputArea.text = "Executing..."
         executecode='start cmd.exe /K executable.exe'
-        #subprocess.Popen(['echo hello'], creationflags=subprocess.CREATE_NEW_CONSOLE)
         os.system(executecode)
     else:
         print("Executable not found at "+directoryname)

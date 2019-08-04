@@ -1,1 +1,2 @@
-python blabla.py
+cd src 
+python temp_main.py
